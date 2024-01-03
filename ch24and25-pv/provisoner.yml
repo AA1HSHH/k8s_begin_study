@@ -1,0 +1,43 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-client
+
+provisioner: k8s-sigs.io/nfs-subdir-external-provisioner 
+parameters:
+  archiveOnDelete: "false"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-dyn-10m-pvc
+
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+
+  resources:
+    requests:
+      storage: 10Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nfs-dyn-pod
+
+spec:
+  volumes:
+  - name: nfs-dyn-10m-vol
+    persistentVolumeClaim:
+      claimName: nfs-dyn-10m-pvc
+
+  containers:
+    - name: nfs-dyn-test
+      image: nginx:alpine
+      ports:
+      - containerPort: 80
+
+      volumeMounts:
+        - name: nfs-dyn-10m-vol
+          mountPath: /tmp
